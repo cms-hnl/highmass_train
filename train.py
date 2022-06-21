@@ -84,12 +84,22 @@ def readFiles():
 
     arr = coffea_out['sel_array'].value
 
+
+
     targets = arr[:,0] # 0 for BG, HNL mass for HNLs
     weights = arr[:,1]
     arr_vars = arr[:, 2:]
 
-    targets = (targets > 0).astype(int) # just 1 for signal
+    sel = (targets == 200) | (targets == 0)
+
+    targets = targets[sel]
+    weights = weights[sel]
+    arr_vars = arr_vars[sel]
+
+    targets = (targets == 200).astype(int) # just 1 for signal
     weights = weights * (weights > 0)
+
+    weights = weights * (1. + (targets > 0) * 21980505.)
 
     print('Done reading files.')
 
@@ -103,7 +113,7 @@ if __name__ == '__main__':
     print('Sizes')
     print(training.nbytes, weights.nbytes, targets.nbytes)
 
-    clf = xgb.XGBClassifier(n_estimators=200, max_depth=6, eta=0.05, min_child_weight=0., subsample=0.7, seed=1234)
+    clf = xgb.XGBClassifier(n_estimators=1000, max_depth=4, eta=0.01, min_child_weight=0., subsample=0.7, seed=1234)
     train(clf, training, weights, targets)
 
 
